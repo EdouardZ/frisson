@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FRISSON prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday product demo for a hackathon jury: sporty, confident, clear
+   IDEA a shipped ad-tech app sitting beside a live freeride broadcast
+   PICTURE the live run drawn in canvas, the adrenaline curve under it, the merchant's ad landing on the peak
+   COLOUR snow white ground, glacier blue leads, adrenaline red marks peaks, deep pine ink
+   TYPE Barlow Condensed 700-800 for display and figures + Barlow for text
+   LAYOUT blue top band with tabs; laptop: form beside preview, video beside signal panel; phone: stacked */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0c131b);--ink:light-dark(#0f2133,#e8eff6);--mut:light-dark(#4d6276,#9db0c2);--panel:light-dark(#f0f6fc,#151f2a);--line:light-dark(#d3e0ec,#273849);--blue:light-dark(#1668c7,#5aa7ff);--onblue:light-dark(#ffffff,#06172b);--red:light-dark(#d9251c,#ff5d52);--ok:light-dark(#0f7a45,#45d08f);--amber:light-dark(#a84f06,#f5a524);--band:light-dark(#1668c7,#0e3a70)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;line-height:1.05;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1{font-size:clamp(32px,4.2vw,46px)}
+h2{font-size:24px;margin-bottom:12px}
+h3{font-size:20px;margin-bottom:10px}
+p{margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,16px)}
+.top{background:var(--band);color:#fff}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;padding-block:12px}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font:800 34px/1 "Barlow Condensed",sans-serif;letter-spacing:.02em}
+.logo svg{width:32px;height:32px;flex:none}
+.tag{font-size:15px;opacity:.92}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+nav a{display:inline-flex;align-items:center;min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.4);color:#fff;text-decoration:none;font-weight:600}
+nav a:hover{background:rgba(255,255,255,.14)}
+nav a[aria-current=page]{background:#fff;color:#0f2133;border-color:#fff}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,.file:focus-within{outline:3px solid #ffb703;outline-offset:2px}
+.pill{font-size:14px;background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;white-space:nowrap}
+.pill i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#45d08f;margin-right:6px}
+main{padding-block:clamp(20px,3vw,34px) 40px}
+.screen{display:none}
+.screen.on{display:block}
+.head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 24px;margin-bottom:20px}
+.lead{color:var(--mut);font-size:17px;max-width:64ch;margin-top:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.note{color:var(--mut);font-size:14px;margin-top:12px}
+.cols{display:grid;gap:18px}
+@media(min-width:880px){.cols{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}.preview{position:sticky;top:16px}}
+form h2{margin-top:6px}
+form h2+*{margin-top:0}
+.field{display:grid;gap:6px;margin-bottom:16px}
+.field>span{font-weight:600;font-size:15px}
+input[type=text],select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px;width:100%}
+input[type=range]{width:100%;accent-color:var(--blue);height:30px;margin:0}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(12em,1fr));gap:0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);cursor:pointer;font:600 15px Barlow,sans-serif}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip:has(input:checked),.chip[aria-pressed=true]{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 13%,var(--bg))}
+.chip:has(input:focus-visible){outline:3px solid #ffb703;outline-offset:2px}
+.chip small{font-weight:400;color:var(--mut);font-size:13px}
+.chip.no{cursor:default;border-style:dashed}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
+.d-suspense{background:#f59e0b}.d-euphorie{background:var(--red)}.d-recuperation{background:var(--blue)}.d-peur{background:var(--ink)}.d-calme{background:var(--mut)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:12px;border:1px solid var(--blue);background:var(--blue);color:var(--onblue);font:600 16px Barlow,sans-serif;text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--blue)}
+.file{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.est{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px}
+.est b{font-family:"Barlow Condensed",sans-serif;font-size:22px}
+.preview .card{display:grid;gap:14px}
+.preview h2{margin:0}
+.ad{position:relative;display:grid;grid-template-columns:64px minmax(0,1fr) 64px;gap:12px;align-items:center;background:#fff;color:#0f2133;border-radius:14px;padding:12px;box-shadow:0 6px 18px rgba(6,24,44,.22);overflow:hidden}
+.ad-img{width:64px;height:64px;border-radius:12px;overflow:hidden}
+.ad-img img,.ad-img svg{width:100%;height:100%;object-fit:cover;display:block}
+.ad-txt{display:grid;gap:2px}
+.ad-tag{font-size:13px;color:#4d6276;font-weight:600}
+.ad-hook{font:700 21px/1.08 "Barlow Condensed",sans-serif}
+.ad-offer{color:#c81e16;font-weight:700;font-size:16px;line-height:1.25}
+.ad-shop{font-size:13px;color:#4d6276}
+.ad-qr{display:grid;justify-items:center;gap:2px;text-align:center}
+.ad-qr svg{width:60px;height:60px}
+.ad-qr small{font-size:13px;line-height:1.05;color:#4d6276}
+.ad-timer{position:absolute;left:0;bottom:0;height:4px;width:100%;background:#e5281e;transform-origin:left;animation:tm 4.2s linear forwards}
+@keyframes tm{to{transform:scaleX(0)}}
+.preview .ad{grid-template-columns:92px minmax(0,1fr) 84px;padding:16px;gap:16px}
+.preview .ad-img{width:92px;height:92px}
+.preview .ad-hook{font-size:27px}
+.preview .ad-qr svg{width:80px;height:80px}
+.preview .ad-timer{display:none}
+@media(max-width:480px){.preview .ad{grid-template-columns:64px minmax(0,1fr);padding:12px}.preview .ad-img{width:64px;height:64px}.preview .ad-qr{grid-column:1/-1;grid-auto-flow:column;justify-content:start;align-items:center;gap:10px}.preview .ad-qr svg{width:56px;height:56px}.preview .ad-hook{font-size:22px}}
+.lcols{display:grid;gap:18px}
+@media(min-width:980px){.lcols{grid-template-columns:minmax(0,1.75fr) minmax(290px,1fr);align-items:start}}
+.lmain,.lside{display:grid;gap:14px;align-content:start}
+.video{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#cfe8fb;container-type:inline-size}
+.video canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ov-tl,.ov-tr{position:absolute;top:12px;display:flex;gap:8px;align-items:center;font-size:14px}
+.ov-tl{left:12px}
+.ov-tr{right:12px;background:rgba(6,20,36,.62);color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap}
+.live{background:#e5281e;color:#fff;font-weight:700;padding:4px 10px;border-radius:6px}
+.vw{background:rgba(6,20,36,.62);color:#fff;padding:4px 10px;border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.safe{position:absolute;left:50%;top:52px;transform:translateX(-50%);max-width:calc(100% - 24px);background:#0f2133;color:#fff;padding:8px 14px;border-radius:10px;font-weight:600;font-size:15px;text-align:center;display:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.safe::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff5d52;margin-right:8px}
+.safe.show{display:block}
+.ov-ad{position:absolute;left:12px;bottom:12px;width:min(460px,calc(100% - 24px));transform:translateY(130%);opacity:0;transition:transform .45s cubic-bezier(.2,.9,.25,1.15),opacity .3s}
+.ov-ad.show{transform:none;opacity:1}
+@media(prefers-reduced-motion:reduce){.ov-ad{transition:none}.ad-timer{animation:none}}
+@container (max-width:540px){.ov-tl,.ov-tr{top:8px;font-size:13px}.ov-tl{left:8px}.ov-tr{right:8px}.safe{top:42px;font-size:13px;padding:6px 10px}.ov-ad{left:8px;bottom:8px;width:calc(100% - 16px)}.ov-ad .ad{grid-template-columns:44px minmax(0,1fr);gap:8px;padding:8px 10px}.ov-ad .ad-img{width:44px;height:44px;border-radius:8px}.ov-ad .ad-qr,.ov-ad .ad-shop{display:none}.ov-ad .ad-hook{font-size:16px}.ov-ad .ad-offer{font-size:14px}}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center}
+.ctrl .seuil{flex:1 1 220px;display:grid;gap:2px;font-size:15px}
+.clock{font-size:15px;color:var(--mut);white-space:nowrap}
+.clock b{color:var(--ink);font-variant-numeric:tabular-nums}
+.chead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:4px 16px}
+.chead h3{margin-bottom:6px}
+.legend{font-size:13px;color:var(--mut);display:flex;gap:6px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--blue)}
+.legend i.sq{border-radius:2px;background:var(--ink);margin-left:8px}
+.fig{position:relative;height:180px}
+.fig svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.fig text{fill:var(--mut);font:13px Barlow,sans-serif;paint-order:stroke;stroke:var(--panel);stroke-width:4px}
+.c-grid{stroke:var(--line)}
+.c-area{fill:color-mix(in srgb,var(--red) 15%,transparent)}
+.c-line{fill:none;stroke:var(--red);stroke-width:2.5;stroke-linejoin:round}
+.c-th{stroke:var(--ink);stroke-dasharray:5 5;opacity:.55}
+.c-win{fill:var(--blue);stroke:var(--panel);stroke-width:2}
+.c-safe{fill:var(--ink)}
+.read{display:grid;gap:12px}
+.readtop{display:flex;align-items:center;gap:16px}
+.idx{font:800 clamp(64px,8vw,92px)/.85 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;min-width:1.4em}
+.readtop small{display:block;color:var(--mut);font-size:14px}
+.emo{display:inline-flex;align-items:center;gap:8px;font:700 24px "Barlow Condensed",sans-serif}
+.sig,.bud,.hb{display:grid;grid-template-columns:8.6em minmax(0,1fr) 5.4em;gap:10px;align-items:center;font-size:14px}
+.bar{height:10px;background:color-mix(in srgb,var(--ink) 10%,transparent);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:5px;width:0}
+.sig b,.bud b,.hb b{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bud{border-top:1px solid var(--line);padding-top:12px;grid-template-columns:8.6em minmax(0,1fr) auto}
+.bud .bar i{background:var(--ok)}
+.bud.full .bar i{background:var(--amber)}
+.sm{min-height:44px;padding:6px 12px;font-size:15px}
+.log,.chat{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.log li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;align-items:center;font-size:14px;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.log .b{grid-row:span 2}
+.log .ld{color:var(--mut)}
+.log li.empty{display:block;color:var(--mut)}
+.b{display:inline-block;font-weight:700;font-size:13px;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.b.win{background:color-mix(in srgb,var(--ok) 17%,transparent);color:var(--ok)}
+.b.lost,.b.mut{background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--mut)}
+.b.amber{background:color-mix(in srgb,var(--amber) 17%,transparent);color:var(--amber)}
+.b.safe{background:var(--ink);color:var(--bg)}
+.chat{gap:4px;font-size:15px;min-height:10.5em;align-content:end}
+.chat b{margin-right:6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(11em,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi b{display:block;font:800 clamp(30px,3.4vw,40px)/1.05 "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi span{color:var(--mut);font-size:14px}
+.kpi.hi b{color:var(--red)}
+.rcols{display:grid;gap:18px;margin-bottom:18px}
+@media(min-width:880px){.rcols{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}}
+.hb{grid-template-columns:9em minmax(0,1fr) 7em;font-size:15px;margin:10px 0}
+.hb span{display:flex;align-items:center;gap:8px;font-weight:600}
+.hb .bar{height:22px;border-radius:6px}
+.hb .bar i{border-radius:6px}
+dl{margin:0;display:grid;gap:10px;font-size:15px}
+dt{font-weight:700}
+dd{margin:0;color:var(--mut)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:14px;color:var(--mut);font-weight:600}
+.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td .dot{margin-right:6px}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:14px;padding-block:18px}
+@media(max-width:600px){.top .wrap{gap:8px 14px}.tag{display:none}nav{margin-left:0;width:100%}nav a{flex:1 1 0;justify-content:center;padding:8px 10px;font-size:15px}.sig,.hb{grid-template-columns:7.6em minmax(0,1fr) 5em}.hb{grid-template-columns:7.6em minmax(0,1fr) 6.4em}table{font-size:14px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 0;text-align:right}.stack td::before{content:attr(data-l);color:var(--mut);text-align:left}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#creer" aria-label="FRISSON, accueil">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 27 12 9l5 8 4-5 9 15z" fill="#fff"/><path d="M12 9l3 5-3-1-2 3z" fill="#cfe8fb"/><path d="M3 20h6l2-4 3 8 3-12 2 8h10" fill="none" stroke="#ff5d52" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      FRISSON
+    </a>
+    <span class="tag">Le bon message, au moment du frisson.</span>
+    <nav aria-label="Écrans du prototype">
+      <a href="#creer" data-s="creer">Créer ma pub</a>
+      <a href="#live" data-s="live">Le live</a>
+      <a href="#resultats" data-s="resultats">Mes résultats</a>
+    </nav>
+    <span class="pill" id="pill"></span>
+  </div>
+</header>
+
+<main>
+  <section class="screen" id="creer">
+    <div class="wrap">
+      <div class="head"><div>
+        <h1>Crée ta pub en 3 clics</h1>
+        <p class="lead">Remplis ta fiche. FRISSON fabrique la pub, l’adapte à chaque émotion du live et achète l’espace au bon moment.</p>
+      </div></div>
+      <div class="cols">
+        <form class="card" id="form" autocomplete="off">
+          <h2>Ton commerce</h2>
+          <label class="field"><span>Exemple de commerce</span>
+            <select id="f-metier">
+              <option value="ski">Location de skis</option>
+              <option value="pain">Boulangerie</option>
+              <option value="planche">Atelier de planches</option>
+              <option value="velo">Réparation de VTT</option>
+            </select></label>
+          <div class="row2">
+            <label class="field"><span>Nom de la boutique</span><input type="text" id="f-nom" maxlength="40"></label>
+            <label class="field"><span>Ville</span><input type="text" id="f-ville" maxlength="30"></label>
+          </div>
+          <h2>Ton offre</h2>
+          <label class="field"><span>Offre affichée dans la pub</span><input type="text" id="f-offre" maxlength="60"></label>
+          <div class="field"><span>Photo du produit (facultatif)</span>
+            <div class="file"><label class="btn ghost" for="f-photo">Choisir une photo</label><input type="file" id="f-photo" accept="image/*" class="vh"><button type="button" class="btn ghost" id="f-photo-x" hidden>Retirer la photo</button></div>
+          </div>
+          <h2>Quand et où</h2>
+          <div class="field"><span>Émotions où ta pub peut apparaître</span>
+            <div class="chips">
+              <label class="chip"><input type="checkbox" name="emo" value="suspense"><i class="dot d-suspense"></i>Suspense <small>pendant le saut</small></label>
+              <label class="chip"><input type="checkbox" name="emo" value="euphorie"><i class="dot d-euphorie"></i>Euphorie <small>saut réussi</small></label>
+              <label class="chip"><input type="checkbox" name="emo" value="recuperation"><i class="dot d-recuperation"></i>Récupération <small>après le run</small></label>
+              <span class="chip no"><i class="dot d-peur"></i>Peur <small>jamais : Safe Moment</small></span>
+            </div>
+          </div>
+          <div class="field"><span>Qui voit ta pub</span>
+            <div class="chips">
+              <label class="chip"><input type="radio" name="zone" value="local">Autour de ma boutique</label>
+              <label class="chip"><input type="radio" name="zone" value="region">Ma région</label>
+              <label class="chip"><input type="radio" name="zone" value="france">Toute la France <small>hors-saison</small></label>
+            </div>
+          </div>
+          <label class="field"><span>Budget par jour : <b id="f-budget-o"></b></span><input type="range" id="f-budget" min="5" max="100" step="5"></label>
+          <p class="est" id="est"></p>
+        </form>
+        <aside class="preview">
+          <div class="card">
+            <h2>Aperçu de ta pub</h2>
+            <div class="chips" id="pv-emo">
+              <button type="button" class="chip" data-e="suspense"><i class="dot d-suspense"></i>Suspense</button>
+              <button type="button" class="chip" data-e="euphorie"><i class="dot d-euphorie"></i>Euphorie</button>
+              <button type="button" class="chip" data-e="recuperation"><i class="dot d-recuperation"></i>Récupération</button>
+            </div>
+            <div id="pv"></div>
+            <p class="note" style="margin:0">Le texte change selon l’émotion détectée dans le live. Le QR code permet de compter les clients qui viennent en boutique.</p>
+            <a class="btn" href="#live">Voir ma pub dans le live</a>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="live">
+    <div class="wrap">
+      <div class="head"><div>
+        <h1>Freeride Open des Alpes, en direct</h1>
+        <p class="lead">FRISSON suit le live, calcule l’Indice d’Adrénaline et achète l’espace pub au pic d’émotion.</p>
+      </div></div>
+      <div class="lcols">
+        <div class="lmain">
+          <div class="video">
+            <canvas id="cv" role="img" aria-label="Animation du live : un snowboardeur enchaîne des sauts devant le public"></canvas>
+            <div class="ov-tl"><span class="live">EN DIRECT</span><span class="vw" id="l-view"></span></div>
+            <div class="ov-tr" id="l-run"></div>
+            <div class="safe" id="l-safe">Chute détectée · Safe Moment : aucune pub</div>
+            <div class="ov-ad" id="l-ad" aria-live="polite"></div>
+          </div>
+          <div class="ctrl">
+            <button class="btn" id="l-play" type="button">Pause</button>
+            <label class="seuil"><span>Seuil de déclenchement : <b id="l-seuil-o"></b> / 100</span><input type="range" id="l-seuil" min="60" max="95" step="1"></label>
+            <span class="clock">Temps du live <b id="l-clock">0:00</b></span>
+          </div>
+          <div class="card">
+            <div class="chead"><h3>Indice d’Adrénaline, 40 dernières secondes</h3><span class="legend"><i></i>pub diffusée <i class="sq"></i>Safe Moment</span></div>
+            <div class="fig"><svg id="chart" aria-label="Courbe de l’Indice d’Adrénaline"></svg></div>
+          </div>
+          <p class="note">Animation de démonstration. Dans la vraie version, FRISSON analyse l’image, le son et le chat du flux vidéo.</p>
+        </div>
+        <aside class="lside">
+          <div class="card read">
+            <div class="readtop">
+              <div class="idx" id="l-idx">0</div>
+              <div><small>Indice d’Adrénaline</small><span class="emo" id="l-emo"></span></div>
+            </div>
+            <div id="l-sigs" style="display:grid;gap:8px"></div>
+            <div class="bud" id="l-budrow"><span>Budget du jour</span><div class="bar"><i id="l-budbar"></i></div><b id="l-bud"></b></div>
+            <button class="btn ghost sm" id="l-day" type="button">Nouvelle journée : budget remis à zéro</button>
+          </div>
+          <div class="card"><h3>Enchères programmatiques</h3><ul class="log" id="l-log"></ul></div>
+          <div class="card"><h3>Chat du live</h3><ul class="chat" id="l-chat"></ul></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="resultats">
+    <div class="wrap">
+      <div class="head"><div>
+        <h1 id="r-find"></h1>
+        <p class="lead">Résultats de ta campagne depuis le début du live.</p>
+      </div><button class="btn ghost" id="r-reset" type="button">Remettre à zéro</button></div>
+      <div class="kpis" id="r-kpis"></div>
+      <div class="rcols">
+        <div class="card"><h2>Vues par émotion</h2><div id="r-emo"></div></div>
+        <div class="card"><h2>Comment lire ces chiffres</h2>
+          <dl>
+            <div><dt>Vues</dt><dd>Spectateurs de ta zone qui ont vu ta pub pendant le live.</dd></div>
+            <div><dt>Enchère</dt><dd>Prix proposé pour 1 000 vues (CPM). FRISSON ne paie que les enchères gagnées.</dd></div>
+            <div><dt>Safe Moment</dt><dd>Pendant une chute, aucune pub n’est achetée et celle en cours est coupée.</dd></div>
+            <div><dt>Clients estimés</dt><dd>Hypothèse : 0,3 % des personnes touchées scannent le QR code en boutique.</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="card"><h2>Tous les moments de frisson</h2>
+        <div class="scroll"><table class="stack"><thead><tr><th>Heure</th><th>Émotion</th><th class="n">Indice</th><th>Résultat</th><th class="n">Enchère</th><th class="n">Vues</th><th class="n">Coût</th></tr></thead><tbody id="r-tb"></tbody></table></div>
+      </div>
+      <p class="note">Données simulées pour la démo : spectateurs, prix des enchères et clients en boutique sont des hypothèses.</p>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">Prototype FRISSON · équipe CodeBreakers · vidéo et données simulées pour la démonstration.</div></footer>
+
+<script>
+{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const fmtE=n=>n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+const fmtN=n=>Math.round(n).toLocaleString('fr-FR');
+const fmtT=t=>{t=Math.max(0,Math.floor(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+let seed=20261123;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+const hs=j=>{const h=Math.sin(j*127.1+311.7)*43758.5453;return h-Math.floor(h)};
+
+const PRESETS={
+  ski:{label:'Location de skis',nom:'Chez Julien',ville:'La Plagne',offre:'-20 % sur la location avant le 1er décembre'},
+  pain:{label:'Boulangerie',nom:'Le Fournil du Col',ville:'Les Arcs',offre:'Café + croissant à 3 €'},
+  planche:{label:'Atelier de planches',nom:'Atelier Lames',ville:'Chamonix',offre:'-15 % sur une planche sur mesure'},
+  velo:{label:'Réparation de VTT',nom:'Roue Libre',ville:'Morzine',offre:'Révision complète à 49 €'}
+};
+const HOOKS={
+  suspense:{ski:'Prêt à envoyer ? Tes skis t’attendent.',pain:'Le cœur qui s’emballe ? Fais le plein d’énergie.',planche:'Ce saut commence par une bonne planche.',velo:'Prêt à voler ? Ton vélo doit l’être aussi.'},
+  euphorie:{ski:'Ce frisson, vis-le pour de vrai cet hiver.',pain:'Un saut pareil, ça se fête.',planche:'Ce style-là, on te le fabrique.',velo:'Tu veux voler comme lui ? On prépare ton vélo.'},
+  recuperation:{ski:'Après son run, prépare le tien.',pain:'Après l’effort, le réconfort.',planche:'Envie de rider ? Passe à l’atelier.',velo:'Après la descente, une révision au top.'}
+};
+const EMO={suspense:'Suspense',euphorie:'Euphorie',recuperation:'Récupération',peur:'Peur',calme:'Calme'};
+const ZONES={local:{label:'Autour de ma boutique',share:.06},region:{label:'Ma région',share:.2},france:{label:'Toute la France',share:.72}};
+const ICONS={
+  ski:'<svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#dff0fd"/><rect x="28" y="4" width="8" height="56" rx="4" fill="#e5281e" transform="rotate(-24 32 32)"/><rect x="28" y="4" width="8" height="56" rx="4" fill="#1668c7" transform="rotate(24 32 32)"/><circle cx="32" cy="32" r="4" fill="#0f2133"/></svg>',
+  pain:'<svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#fdf0dc"/><g fill="#d98a2b" stroke="#9a5512" stroke-width="2"><ellipse cx="13" cy="40" rx="7" ry="9" transform="rotate(-40 13 40)"/><ellipse cx="51" cy="40" rx="7" ry="9" transform="rotate(40 51 40)"/><ellipse cx="21" cy="32" rx="8" ry="12" transform="rotate(-20 21 32)"/><ellipse cx="43" cy="32" rx="8" ry="12" transform="rotate(20 43 32)"/><ellipse cx="32" cy="29" rx="9" ry="13"/></g></svg>',
+  planche:'<svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#e3f4ef"/><g transform="rotate(-35 32 32)"><rect x="24" y="4" width="16" height="56" rx="8" fill="#12324a"/><rect x="24" y="22" width="16" height="6" fill="#e5281e"/><rect x="24" y="36" width="16" height="6" fill="#e5281e"/></g></svg>',
+  velo:'<svg viewBox="0 0 64 64"><rect width="64" height="64" fill="#eef1f5"/><g fill="none" stroke-width="3" stroke-linejoin="round"><circle cx="16" cy="40" r="11" stroke="#12324a"/><circle cx="48" cy="40" r="11" stroke="#12324a"/><path d="M16 40 27 24h17l4 16M27 24l9 16h12M24 19h7" stroke="#e5281e"/></g></svg>'
+};
+const qr=txt=>{let s=7;for(const ch of txt)s=(s*31+ch.charCodeAt(0))%2147483647;s=s||7;const r=()=>(s=s*16807%2147483647)/2147483647;const n=21;let d='';const fin=(x,y)=>(x<8&&y<8)||(x>=n-8&&y<8)||(x<8&&y>=n-8);for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(!fin(x,y)&&r()<.5)d+=`M${x} ${y}h1v1h-1z`}const f=(x,y)=>`M${x} ${y}h7v7h-7zM${x+1} ${y+1}v5h5v-5zM${x+2} ${y+2}h3v3h-3z`;return `<svg viewBox="-1 -1 23 23" role="img" aria-label="QR code de démonstration"><rect x="-1" y="-1" width="23" height="23" fill="#fff"/><path fill="#0f2133" fill-rule="evenodd" d="${f(0,0)}${f(14,0)}${f(0,14)}${d}"/></svg>`};
+
+/* ---------- campagne ---------- */
+const DEF={metier:'ski',...PRESETS.ski,emos:['euphorie','recuperation'],zone:'france',budget:30,seuil:80};
+delete DEF.label;
+const camp={...DEF,photo:null};
+try{const s=JSON.parse(localStorage.getItem('frisson-demo')||'null');if(s&&PRESETS[s.metier])Object.assign(camp,s,{photo:null})}catch(e){}
+const save=()=>{try{localStorage.setItem('frisson-demo',JSON.stringify({...camp,photo:null}))}catch(e){}};
+const adHTML=emo=>{const p=PRESETS[camp.metier];return `<div class="ad"><div class="ad-img">${camp.photo?`<img src="${camp.photo}" alt="Photo du produit">`:ICONS[camp.metier]}</div><div class="ad-txt"><span class="ad-tag">Pub · ${esc(camp.ville||'Ma ville')}</span><strong class="ad-hook">${HOOKS[emo][camp.metier]}</strong><span class="ad-offer">${esc(camp.offre||'Ton offre ici')}</span><span class="ad-shop">${esc(camp.nom||'Ma boutique')} · ${p.label}</span></div><div class="ad-qr">${qr(camp.nom||'x')}<small>Scanne en boutique</small></div><i class="ad-timer"></i></div>`};
+let pvEmo='euphorie';
+function fillForm(){
+  $('#f-metier').value=camp.metier;$('#f-nom').value=camp.nom;$('#f-ville').value=camp.ville;$('#f-offre').value=camp.offre;
+  $$('input[name=emo]').forEach(c=>c.checked=camp.emos.includes(c.value));
+  $$('input[name=zone]').forEach(c=>c.checked=c.value===camp.zone);
+  $('#f-budget').value=camp.budget;$('#l-seuil').value=camp.seuil;
+}
+function changed(){
+  save();
+  $('#pv').innerHTML=adHTML(pvEmo);
+  $$('#pv-emo .chip').forEach(b=>b.setAttribute('aria-pressed',b.dataset.e===pvEmo));
+  $('#pill').innerHTML=`<i></i><b>${esc(camp.nom||'Ma boutique')}</b> · campagne active`;
+  $('#f-budget-o').textContent=camp.budget+' €';
+  $('#l-seuil-o').textContent=camp.seuil;
+  const z=ZONES[camp.zone];
+  $('#est').innerHTML=`Avec ${camp.budget} € par jour : environ <b>${fmtN(camp.budget/2.8*1000)} vues</b> par jour. Zone « ${z.label} » : ${Math.round(z.share*100)} % des spectateurs du live. <span style="color:var(--mut)">Hypothèses de démo, 2,80 € pour 1 000 vues.</span>`;
+  $('#f-photo-x').hidden=!camp.photo;
+}
+$('#f-metier').addEventListener('change',e=>{const p=PRESETS[e.target.value];Object.assign(camp,{metier:e.target.value,nom:p.nom,ville:p.ville,offre:p.offre});fillForm();changed()});
+['nom','ville','offre'].forEach(k=>$('#f-'+k).addEventListener('input',e=>{camp[k]=e.target.value;changed()}));
+$$('input[name=emo]').forEach(c=>c.addEventListener('change',()=>{camp.emos=$$('input[name=emo]:checked').map(x=>x.value);changed()}));
+$$('input[name=zone]').forEach(c=>c.addEventListener('change',()=>{camp.zone=c.value;changed()}));
+$('#f-budget').addEventListener('input',e=>{camp.budget=+e.target.value;changed()});
+$('#l-seuil').addEventListener('input',e=>{camp.seuil=+e.target.value;changed();drawChart()});
+$('#f-photo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{camp.photo=fr.result;changed()};fr.readAsDataURL(f)});
+$('#f-photo-x').addEventListener('click',()=>{camp.photo=null;$('#f-photo').value='';changed()});
+$('#form').addEventListener('submit',e=>e.preventDefault());
+$$('#pv-emo .chip').forEach(b=>b.addEventListener('click',()=>{pvEmo=b.dataset.e;changed()}));
+
+/* ---------- simulation du live ---------- */
+const V=230,PXM=14;
+const PH=[
+  {k:'ride',d:3.5,v0:V,v1:V,run:1,start:1},{k:'approach',d:2.2,v0:V,v1:V*1.08,run:1},{k:'air',d:2.2,v0:V*1.08,v1:V*1.08,run:1,h:7,rot:1},{k:'land',d:1.6,v0:V*1.08,v1:V*.92,run:1},{k:'cruise',d:4,v0:V*.92,v1:V,run:1},
+  {k:'ride',d:2,v0:V,v1:V,run:2,start:1},{k:'approach',d:2.2,v0:V,v1:V*1.08,run:2},{k:'air',d:1.8,v0:V*1.08,v1:V*1.08,run:2,h:6,rot:.62},{k:'crash',d:1.4,v0:V*.7,v1:0,run:2},{k:'down',d:4,v0:0,v1:0,run:2},
+  {k:'ride',d:2.5,v0:0,v1:V,run:3,start:1},{k:'approach',d:2.2,v0:V,v1:V*1.1,run:3},{k:'air',d:2.5,v0:V*1.1,v1:V*1.1,run:3,h:9,rot:2},{k:'land',d:1.6,v0:V*1.1,v1:V*.92,run:3},{k:'cruise',d:4.5,v0:V*.92,v1:V,run:3}
+];
+let LT=0,LX=0;for(const p of PH){p.t0=LT;p.x0=LX;LX+=(p.v0+p.v1)/2*p.d;LT+=p.d}
+const AIRS=PH.filter(p=>p.k==='air');
+const RIDERS=['M. Duval','L. Okafor','S. Brun'];
+const ACT={ride:'glisse',approach:'tremplin',air:'saut',land:'réception',cruise:'glisse',crash:'chute',down:'au sol'};
+const ground=x=>x*.2+16*Math.sin(x/310)+7*Math.sin(x/123+2);
+const lipsNear=L=>{const a=[];for(let l=L-1;l<=L+1;l++)for(const p of AIRS){const lip=p.x0+l*LX;a.push({lip,end:lip+(p.v0+p.v1)/2*p.d})}return a};
+const surf=(x,lips)=>{let r=0;for(const k of lips)if(x>k.lip-150&&x<=k.lip){const q=(x-k.lip+150)/150;r=46*q*q}return ground(x)-r};
+const ang=(x,lips)=>Math.atan2(surf(x+3,lips)-surf(x-3,lips),6);
+const sm=u=>u*u*(3-2*u),eo=u=>1-(1-u)*(1-u);
+function riderAt(t){
+  const L=Math.floor(t/LT),tl=t-L*LT;let i=0;while(i<PH.length-1&&tl>=PH[i+1].t0)i++;
+  const p=PH[i],tau=tl-p.t0,u=clamp(tau/p.d),lips=lipsNear(L);
+  const x=p.x0+p.v0*tau+(p.v1-p.v0)/(2*p.d)*tau*tau+L*LX,v=p.v0+(p.v1-p.v0)*u;
+  const r={L,i,p,u,x,v,lips,y:surf(x,lips),rot:ang(x,lips),crouch:.3,lean:.18,arms:0,air:0};
+  if(p.k==='air'){
+    const lip=p.x0+L*LX,xe=lip+(p.v0+p.v1)/2*p.d,y0=ground(lip)-46,y1=ground(xe),H=p.h*PXM-23,a0=-.39,a1=Math.atan(.2);
+    r.y=y0+(y1-y0)*u-4*H*u*(1-u);r.rot=a0+(a1-a0)*u-2*Math.PI*p.rot*sm(u);r.crouch=.3+.6*Math.sin(Math.PI*u);r.arms=p.rot<1?0:(u>.35&&u<.8?1:0);r.air=1;
+  }else if(p.k==='crash'){
+    r.y=ground(x)-30*Math.abs(Math.sin(u*Math.PI*2))*(1-u);r.rot=ang(x,lips)-2*Math.PI*(.62+.38*eo(u));r.crouch=.9;r.lean=.1;r.arms=1;
+  }else if(p.k==='down'){
+    if(u<.55){r.crouch=1.7;r.lean=-.5}else{const w=(u-.55)/.45;r.crouch=1.7-1.4*w;r.lean=-.5+.68*w;r.arms=w>.75?1:0}
+  }else if(p.k==='land'){r.crouch=.3+.6*Math.sin(Math.PI*clamp(u*2));r.arms=u>.5?1:0}
+  else if(p.k==='cruise'){r.arms=u<.3?1:0}
+  else if(p.k==='approach'){r.crouch=.45}
+  return r;
+}
+const S={t:0,idx:15,spd:60,crowd:62,chat:4,ia:.2,hHold:0,runPeak:0,key:'',fired:new Set(),recs:[],spent:0,hist:[],hAcc:0,parts:[],cAcc:0,lines:[],adOn:false,adUntil:0,paused:false,camY:null,r:null};
+const viewers=()=>Math.round(2400+180*Math.sin(S.t/9)+S.idx*4);
+const ov=$('#l-ad');
+function showAd(emo,head){S.adOn=true;S.adUntil=S.t+4.2;if(!head){ov.innerHTML=adHTML(emo);ov.classList.remove('show');void ov.offsetWidth;ov.classList.add('show')}}
+function hideAd(){S.adOn=false;ov.classList.remove('show')}
+function opp(emo,idx,head){
+  const rec={t:S.t,emo,idx:Math.round(idx),seuil:camp.seuil,dec:'',cpm:0,imps:0,cost:0};
+  if(emo==='peur')rec.dec='safe';
+  else if(!camp.emos.includes(emo))rec.dec='off';
+  else if(idx<camp.seuil)rec.dec='low';
+  else if(S.spent>=camp.budget-.005)rec.dec='budget';
+  else{
+    rec.cpm=1.4+idx/100*1.5+rnd()*.4;
+    if(rnd()<.72){let imps=viewers()*ZONES[camp.zone].share*(.86+rnd()*.12),cost=imps/1000*rec.cpm;const left=camp.budget-S.spent;if(cost>left){imps*=left/cost;cost=left}rec.imps=Math.round(imps);rec.cost=cost;S.spent+=cost;rec.dec='win';showAd(emo,head)}
+    else rec.dec='lost';
+  }
+  S.recs.push(rec);if(!head)renderLog();
+}
+const CHAT={
+  ride:['allez allez','la neige a l’air parfaite','c’est quel spot ?','quelle lumière sur la face','première fois que je regarde, trop bien'],
+  approach:['il va envoyer','attention le kicker','prêt ???','il prend de la vitesse','chut, ça va sauter'],
+  air:['OUIIII','il vole','LE BACKFLIP','c’est haut ça','mais il est fou'],
+  land:['PLAQUÉ !!!','propre','quel style','j’ai des frissons','incroyable'],
+  cruise:['je veux y aller cet hiver','qui loue du matos à {v} ?','trop beau','on y va en décembre ?','replay svp'],
+  crash:['aïe','oh non','il va bien ?','ouch, la réception'],
+  up:['il se relève !','respect','il lève le pouce, ouf','courage']
+};
+const NAMES=[['lea_ride','#d9480f'],['tom73','#1c7ed6'],['max.fs','#2b8a3e'],['ines_snow','#ae3ec9'],['hugo_bzh','#e8590c'],['sarah.p','#0c8599'],['nico_rip','#c2255c'],['camille74','#7048e8']];
+function burst(x,y,n){for(let j=0;j<n;j++){const a=-Math.PI*(.08+.84*Math.random()),s=60+Math.random()*230;S.parts.push({x,y:y-4,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:.5+Math.random()*.8,r:1.5+Math.random()*3})}}
+function step(dt,head){
+  S.t+=dt;const r=riderAt(S.t);S.r=r;const p=r.p,u=r.u,key=r.L+':'+r.i;
+  if(key!==S.key){S.key=key;if(p.start)S.runPeak=0;if(p.k==='land'&&!head)burst(r.x,r.y,36);if(p.k==='crash'){if(!head)burst(r.x,r.y,70);hideAd();opp('peur',S.idx,head)}}
+  let crowd=62,chat=4,ia=.2;
+  if(p.k==='approach'){crowd=70+18*u;chat=8+8*u;ia=.8}
+  else if(p.k==='air'){crowd=88+8*u;chat=16+10*u;ia=1}
+  else if(p.k==='land'){crowd=106;chat=40;ia=1}
+  else if(p.k==='cruise'){crowd=100-36*u;chat=34-28*u;ia=.4}
+  else if(p.k==='crash'){crowd=98;chat=30;ia=1}
+  else if(p.k==='down'){crowd=80-20*u;chat=24-12*u;ia=.6}
+  const a=Math.min(1,dt*3);S.crowd+=(crowd-S.crowd)*a;S.chat+=(chat-S.chat)*a;S.ia+=(ia-S.ia)*a;S.spd=r.v/V*68;
+  const hNow=r.air?Math.max(0,(ground(r.x)-r.y)/PXM):0;S.hHold=Math.max(hNow,S.hHold*Math.exp(-dt/8));
+  const raw=100*(.1*clamp(S.spd/80)+.25*clamp(S.hHold/8)+.25*clamp((S.crowd-55)/50)+.2*clamp(S.chat/40)+.2*S.ia);
+  S.idx+=(raw-S.idx)*Math.min(1,dt*4);S.runPeak=Math.max(S.runPeak,S.idx);
+  const once=(tag,cond,fn)=>{const k=key+tag;if(cond&&!S.fired.has(k)){S.fired.add(k);fn()}};
+  once('s',p.k==='air'&&u>=.7,()=>opp('suspense',S.idx,head));
+  once('e',p.k==='land'&&u>=.7,()=>opp('euphorie',S.idx,head));
+  once('r',p.k==='cruise'&&u>=.5,()=>opp('recuperation',S.runPeak,head));
+  if(S.adOn&&S.t>S.adUntil)hideAd();
+  S.hAcc+=dt;while(S.hAcc>=.1){S.hAcc-=.1;S.hist.push({t:S.t,v:S.idx})}if(S.hist.length>480)S.hist.splice(0,S.hist.length-480);
+  if(head)return;
+  if(!r.air&&r.v>40&&p.k!=='down')for(let j=0;j<2;j++)S.parts.push({x:r.x-22,y:r.y-3,vx:-r.v*.25-Math.random()*70,vy:-30-Math.random()*110,l:.35+Math.random()*.4,r:1.2+Math.random()*2.2});
+  for(const q of S.parts){q.vy+=420*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.l-=dt}
+  S.parts=S.parts.filter(q=>q.l>0).slice(-280);
+  S.cAcc+=dt*clamp(S.chat/9,.35,3.5);
+  if(S.cAcc>=1){S.cAcc=0;const pool=CHAT[p.k==='down'?(u<.55?'crash':'up'):p.k];const m=pool[Math.floor(Math.random()*pool.length)].replace('{v}',camp.ville||'la station');S.lines.push([NAMES[Math.floor(Math.random()*NAMES.length)],m]);if(S.lines.length>7)S.lines.shift();renderChat()}
+}
+const curEmo=r=>{const k=r.p.k,u=r.u;if(k==='crash'||(k==='down'&&u<.55))return'peur';if(k==='approach'||k==='air')return'suspense';if(k==='land'||(k==='cruise'&&u<.25))return'euphorie';if(k==='cruise')return'recuperation';return'calme'};
+
+/* ---------- dessin du live ---------- */
+const cv=$('#cv'),cx=cv.getContext('2d');let CW=0,CH=0,DPR=1,KS=1;
+const roCv=new ResizeObserver(()=>{const b=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);CW=b.width;CH=b.height;cv.width=Math.max(1,Math.round(CW*DPR));cv.height=Math.max(1,Math.round(CH*DPR));KS=clamp(CW/900,.5,1.3)});roCv.observe(cv);
+const mk=(n,P,a,b)=>Array.from({length:n},(_,j)=>({x:j*P/n+hs(j*3+P)*P/n*.5,h:a+hs(j*7+P)*(b-a),w:P/n*(.75+hs(j*11+P)*.5)}));
+const FAR=mk(6,1500,130,230),MID=mk(5,1100,70,150);
+const rr=(x,y,w,h,r)=>{cx.beginPath();if(cx.roundRect)cx.roundRect(x,y,w,h,r);else cx.rect(x,y,w,h)};
+function mountains(ox,P,arr,base,col,shade,cap,Wl){
+  for(let s=Math.floor(-ox/P)-1;s*P+ox<Wl+P;s++)for(const m of arr){
+    const px=ox+s*P+m.x,top=base-m.h,c=.3;if(px+m.w<-20||px-m.w>Wl+20)continue;
+    cx.fillStyle=col;cx.beginPath();cx.moveTo(px-m.w,base);cx.lineTo(px,top);cx.lineTo(px+m.w,base);cx.fill();
+    cx.fillStyle=shade;cx.beginPath();cx.moveTo(px,top);cx.lineTo(px+m.w,base);cx.lineTo(px+m.w*.12,base);cx.fill();
+    cx.fillStyle=cap;cx.beginPath();cx.moveTo(px,top);cx.lineTo(px+m.w*c,top+m.h*c);cx.lineTo(px+m.w*c*.4,top+m.h*c*.78);cx.lineTo(px,top+m.h*c*.95);cx.lineTo(px-m.w*c*.5,top+m.h*c*.72);cx.lineTo(px-m.w*c,top+m.h*c);cx.fill();
+  }
+}
+function pine(x,y,s){cx.save();cx.translate(x,y);cx.scale(s,s);cx.fillStyle='#5b4636';cx.fillRect(-3,-10,6,12);
+  for(let k=0;k<3;k++){const w=24-k*6,b=-8-k*17,t=b-28;cx.fillStyle='#1f4d45';cx.beginPath();cx.moveTo(-w,b);cx.lineTo(0,t);cx.lineTo(w,b);cx.fill();cx.fillStyle='#2f6f60';cx.beginPath();cx.moveTo(0,t);cx.lineTo(w,b);cx.lineTo(w*.2,b);cx.fill();cx.fillStyle='#f4f9fd';cx.beginPath();cx.moveTo(-w*.35,t+12);cx.lineTo(0,t);cx.lineTo(w*.35,t+12);cx.lineTo(0,t+8);cx.fill()}
+  cx.restore()}
+const FC=['#e5281e','#1668c7','#ffc21a','#2b8a3e','#ae3ec9','#0f2133'],SK=['#f1c27d','#c68642','#8d5524','#ffdbac'];
+function fan(x,y,j,jump,up){cx.save();cx.translate(x,y-jump);const c=FC[j%6];cx.fillStyle='#22364a';cx.fillRect(-4,-7,3,7);cx.fillRect(1,-7,3,7);cx.fillStyle=c;cx.fillRect(-4.5,-20,9,14);
+  if(up){cx.strokeStyle=c;cx.lineWidth=2.6;cx.lineCap='round';cx.beginPath();cx.moveTo(-4,-18);cx.lineTo(-8,-30);cx.moveTo(4,-18);cx.lineTo(8,-30);cx.stroke()}
+  cx.fillStyle=SK[(j*7)%4];cx.beginPath();cx.arc(0,-24,4.2,0,7);cx.fill();cx.restore()}
+function rider(r){
+  cx.save();cx.translate(r.x,r.y);cx.rotate(r.rot);cx.scale(1.25,1.25);
+  const c=r.crouch,hy=-21+9*Math.min(c,1)+(c>1?(c-1)*12:0),hx=c>1?-(c-1)*8:0,sx=hx+18*Math.sin(r.lean),sy=hy-18*Math.cos(r.lean),kx=4+5*Math.min(c,1)+(c>1?(c-1)*10:0),ky=(-7+hy)/2;
+  cx.fillStyle='#e5281e';rr(-27,-5,54,5,3);cx.fill();cx.fillStyle='#0f2133';cx.fillRect(-13,-8,7,3);cx.fillRect(6,-8,7,3);
+  cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#22364a';cx.lineWidth=6;cx.beginPath();cx.moveTo(-9,-7);cx.lineTo(-9+kx,ky);cx.lineTo(hx-3,hy);cx.moveTo(9,-7);cx.lineTo(9+kx*.7,ky);cx.lineTo(hx+3,hy);cx.stroke();
+  cx.strokeStyle='#ffc21a';cx.lineWidth=11;cx.beginPath();cx.moveTo(hx,hy);cx.lineTo(sx,sy);cx.stroke();
+  cx.strokeStyle='#e9a100';cx.lineWidth=5;cx.beginPath();
+  if(r.arms){cx.moveTo(sx,sy+2);cx.lineTo(sx-5,sy-15);cx.moveTo(sx,sy+2);cx.lineTo(sx+9,sy-14)}else{cx.moveTo(sx,sy+2);cx.lineTo(sx-14,sy+9);cx.moveTo(sx,sy+2);cx.lineTo(sx+13,sy+8)}
+  cx.stroke();cx.fillStyle='#f7f9fb';cx.beginPath();cx.arc(sx+2,sy-8,7,0,7);cx.fill();cx.strokeStyle='#0f2133';cx.lineWidth=1.2;cx.stroke();cx.fillStyle='#1668c7';rr(sx+3,sy-11,7,4,2);cx.fill();
+  cx.restore();
+}
+function draw(dt){
+  const r=S.r;if(!CW||!r)return;
+  cx.setTransform(DPR*KS,0,0,DPR*KS,0,0);const Wl=CW/KS,Hl=CH/KS;
+  const camX=r.x-Wl*.36,ty=ground(r.x)-Hl*.6;S.camY=S.camY==null?ty:S.camY+(ty-S.camY)*Math.min(1,dt*4);const camY=S.camY;
+  let g=cx.createLinearGradient(0,0,0,Hl*.65);g.addColorStop(0,'#4ea6ec');g.addColorStop(1,'#d3ebfc');cx.fillStyle=g;cx.fillRect(0,0,Wl,Hl);
+  const sxu=Wl*.84,syu=Hl*.17;g=cx.createRadialGradient(sxu,syu,10,sxu,syu,110);g.addColorStop(0,'rgba(255,248,220,.9)');g.addColorStop(1,'rgba(255,248,220,0)');cx.fillStyle=g;cx.fillRect(sxu-110,syu-110,220,220);cx.fillStyle='#fff7d9';cx.beginPath();cx.arc(sxu,syu,28,0,7);cx.fill();
+  mountains(-camX*.06,1500,FAR,Hl*.5,'#bcd6ec','#a8c7e2','#f5faff',Wl);
+  mountains(-camX*.16,1100,MID,Hl*.64,'#86abcc','#7096ba','#e9f2fa',Wl);
+  cx.fillStyle='#8fb1cf';cx.fillRect(0,Hl*.64-1,Wl,Hl);
+  const fo=-camX*.3;for(let j=Math.floor(-fo/14)-1;j*14+fo<Wl+14;j++){const x=j*14+fo,h=10+hs(j)*12;cx.fillStyle=hs(j+5)>.5?'#3f6f7a':'#355f6a';cx.beginPath();cx.moveTo(x-7,Hl*.64+2);cx.lineTo(x,Hl*.64-h);cx.lineTo(x+7,Hl*.64+2);cx.fill()}
+  cx.save();cx.translate(-camX,-camY);
+  const lips=r.lips,x0=camX-120,x1=camX+Wl+120,near=x=>lips.some(k=>x>k.lip-430&&x<k.end+320);
+  for(let j=Math.floor(x0/170);j*170<x1;j++){if(hs(j)<.35)continue;const x=j*170+hs(j+7)*90;if(near(x))continue;pine(x,ground(x)+4,.7+hs(j+3)*.7)}
+  for(let j=Math.floor(x0/260);j*260<x1;j++){const x=j*260+40;if(near(x))continue;const y=ground(x);cx.fillStyle=j%2?'#e5281e':'#1668c7';cx.fillRect(x-1.5,y-36,3,36);cx.beginPath();cx.moveTo(x+1.5,y-36);cx.lineTo(x+16,y-31);cx.lineTo(x+1.5,y-26);cx.fill()}
+  const ex=S.idx,jumpAmp=ex>60?(ex-60)/40*6:0;
+  for(const k of lips){if(k.end+300<x0||k.end-80>x1)continue;
+    for(let j=0;j<16;j++){const x=k.end-40+j*20+hs(j+k.lip)*8;fan(x,ground(x)+3,j,Math.abs(Math.sin(S.t*8+j*1.7))*jumpAmp,ex>80)}
+    let n=0;for(let fx=k.end-60;fx<k.end+260;fx+=80,n++){const y0=ground(fx),y1=ground(fx+78),ad=S.adOn;
+      cx.fillStyle=ad?'#e5281e':(n%2?'#ffffff':'#1668c7');cx.beginPath();cx.moveTo(fx,y0-24);cx.lineTo(fx+78,y1-24);cx.lineTo(fx+78,y1-5);cx.lineTo(fx,y0-5);cx.fill();
+      cx.save();cx.translate(fx+39,(y0+y1)/2-14.5);cx.rotate(Math.atan2(y1-y0,78));cx.fillStyle=ad||!(n%2)?'#ffffff':'#1668c7';cx.font='700 11px Barlow, sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(ad?(camp.nom||'Ma boutique').slice(0,13):'FRISSON',0,0);cx.restore()}
+  }
+  cx.beginPath();cx.moveTo(x0,surf(x0,lips));for(let x=x0;x<=x1;x+=6)cx.lineTo(x,surf(x,lips));
+  g=cx.createLinearGradient(0,camY+Hl*.3,0,camY+Hl);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#d9e8f5');
+  cx.lineTo(x1,camY+Hl+200);cx.lineTo(x0,camY+Hl+200);cx.closePath();cx.fillStyle=g;cx.fill();
+  cx.beginPath();cx.moveTo(x0,surf(x0,lips));for(let x=x0;x<=x1;x+=6)cx.lineTo(x,surf(x,lips));cx.strokeStyle='#b5cde3';cx.lineWidth=2;cx.stroke();
+  for(const k of lips){if(k.lip<x0||k.lip-150>x1)continue;cx.beginPath();for(let x=k.lip-150;x<=k.lip;x+=10)cx.lineTo(x,surf(x,lips));cx.lineTo(k.lip,ground(k.lip));for(let x=k.lip;x>=k.lip-150;x-=10)cx.lineTo(x,ground(x));cx.fillStyle='rgba(90,140,190,.16)';cx.fill()}
+  const hgt=Math.max(0,ground(r.x)-r.y);cx.fillStyle='rgba(30,60,90,.18)';cx.beginPath();cx.ellipse(r.x,ground(r.x)+2,30/(1+hgt/60),4/(1+hgt/80),Math.atan(.2),0,7);cx.fill();
+  cx.fillStyle='#eef6ff';for(const q of S.parts){cx.globalAlpha=clamp(q.l*1.6);cx.beginPath();cx.arc(q.x,q.y,q.r,0,7);cx.fill()}cx.globalAlpha=1;
+  rider(r);
+  cx.restore();
+}
+
+/* ---------- interface du live ---------- */
+const SIG=[['Vitesse du rider',()=>clamp(S.spd/80),()=>Math.round(S.spd)+' km/h'],['Hauteur du saut',()=>clamp(S.hHold/10),()=>S.hHold.toFixed(1).replace('.',',')+' m'],['Bruit du public',()=>clamp((S.crowd-55)/50),()=>Math.round(S.crowd)+' dB'],['Réactions du chat',()=>clamp(S.chat/40),()=>Math.round(S.chat)+' msg/s'],['Action vue par l’IA',()=>S.ia,()=>ACT[S.r.p.k]]];
+$('#l-sigs').innerHTML=SIG.map((s,i)=>`<div class="sig"><span>${s[0]}</span><div class="bar"><i id="sg${i}"></i></div><b id="sv${i}"></b></div>`).join('');
+const DEC={win:['Diffusée','win'],lost:['Perdue','lost'],low:['Trop bas','mut'],off:['Non ciblée','mut'],budget:['Budget atteint','amber'],safe:['Safe Moment','safe']};
+const detail=r=>({win:`${fmtN(r.imps)} vues · ${fmtE(r.cost)}`,lost:'Une autre marque a payé plus',low:`Indice sous le seuil (${r.seuil})`,off:'Émotion non ciblée par ta campagne',budget:'Budget du jour atteint',safe:'Chute détectée : aucune pub, pub en cours coupée'}[r.dec]);
+function renderLog(){const R=S.recs.slice(-6).reverse();$('#l-log').innerHTML=R.length?R.map(r=>`<li><span class="b ${DEC[r.dec][1]}">${DEC[r.dec][0]}</span><span>${fmtT(r.t)} · ${EMO[r.emo]} · indice ${r.idx}${r.cpm?` · enchère ${fmtE(r.cpm)}`:''}</span><span class="ld">${detail(r)}</span></li>`).join(''):'<li class="empty">En attente du premier moment de frisson.</li>'}
+function renderChat(){$('#l-chat').innerHTML=S.lines.map(([n,m])=>`<li><b style="color:${n[1]}">${n[0]}</b>${esc(m)}</li>`).join('')}
+function ui(){
+  const r=S.r;if(!r)return;const i=Math.round(S.idx),e=curEmo(r),el=$('#l-idx');
+  el.textContent=i;el.style.color=i>=camp.seuil?'var(--red)':i>=50?'var(--amber)':'var(--ink)';
+  $('#l-emo').innerHTML=`<i class="dot d-${e}"></i>${EMO[e]}`;
+  SIG.forEach((s,k)=>{$('#sg'+k).style.width=(s[1]()*100).toFixed(1)+'%';$('#sv'+k).textContent=s[2]()});
+  $('#l-view').textContent=fmtN(viewers())+' spectateurs';
+  $('#l-run').textContent=`Run ${r.p.run} / 3 · ${RIDERS[r.p.run-1]}`;
+  $('#l-clock').textContent=fmtT(S.t);
+  $('#l-safe').classList.toggle('show',r.p.k==='crash'||(r.p.k==='down'&&r.u<.6));
+  const full=S.spent>=camp.budget-.005;$('#l-budrow').classList.toggle('full',full);
+  $('#l-budbar').style.width=clamp(S.spent/camp.budget)*100+'%';$('#l-bud').textContent=`${fmtE(S.spent)} / ${fmtE(camp.budget)}`;
+}
+const chart=$('#chart');let chW=0,chH=0;
+function drawChart(){
+  if(!chW)return;const W=chW,H=chH,l=34,rt=12,t=12,b=24,span=40,now=S.t,X=v=>l+(v-(now-span))/span*(W-l-rt),Y=v=>t+(1-v/100)*(H-t-b);
+  const pts=S.hist.filter(h=>h.t>=now-span);let line='';pts.forEach((h,i)=>line+=(i?'L':'M')+X(h.t).toFixed(1)+' '+Y(h.v).toFixed(1));
+  let s=[0,50,100].map(v=>`<line class="c-grid" x1="${l}" x2="${W-rt}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${l-6}" y="${Y(v)+4}" text-anchor="end">${v}</text>`).join('');
+  if(pts.length>1)s+=`<path class="c-area" d="${line}L${X(pts[pts.length-1].t).toFixed(1)} ${Y(0)}L${X(pts[0].t).toFixed(1)} ${Y(0)}Z"/><path class="c-line" d="${line}"/>`;
+  s+=`<line class="c-th" x1="${l}" x2="${W-rt}" y1="${Y(camp.seuil)}" y2="${Y(camp.seuil)}"/><text x="${W-rt}" y="${Y(camp.seuil)-7}" text-anchor="end">seuil ${camp.seuil}</text>`;
+  for(const r of S.recs){if(r.t<now-span)continue;if(r.dec==='win')s+=`<circle class="c-win" cx="${X(r.t).toFixed(1)}" cy="${Y(r.idx).toFixed(1)}" r="6"/>`;if(r.dec==='safe')s+=`<rect class="c-safe" x="${(X(r.t)-5).toFixed(1)}" y="${(Y(r.idx)-5).toFixed(1)}" width="10" height="10" rx="2"/>`}
+  s+=`<text x="${l}" y="${H-4}">-40 s</text>${W>=520?`<text x="${(l+W-rt)/2}" y="${H-4}" text-anchor="middle">-20 s</text>`:''}<text x="${W-rt}" y="${H-4}" text-anchor="end">maintenant</text>`;
+  chart.innerHTML=s;
+}
+const roCh=new ResizeObserver(()=>{chW=chart.clientWidth;chH=chart.clientHeight;drawChart()});roCh.observe(chart);
+$('#l-play').addEventListener('click',e=>{S.paused=!S.paused;e.currentTarget.textContent=S.paused?'Lecture':'Pause'});
+$('#l-day').addEventListener('click',()=>{S.spent=0;ui()});
+
+/* ---------- résultats ---------- */
+function renderRes(){
+  const R=S.recs,W=R.filter(r=>r.dec==='win'),imps=W.reduce((a,r)=>a+r.imps,0),cost=W.reduce((a,r)=>a+r.cost,0),safe=R.filter(r=>r.dec==='safe').length,cl=Math.round(imps*.003),cpm=imps?cost/imps*1000:0;
+  $('#r-find').textContent=W.length?`Ta pub a été vue ${fmtN(imps)} fois, au sommet de l’émotion`:'Aucune pub diffusée pour l’instant : lance le live';
+  $('#r-kpis').innerHTML=[[W.length,'pubs diffusées',1],[fmtN(imps),'vues au pic d’émotion'],[fmtE(cost),`dépensés sur ${fmtE(camp.budget)} par jour`],[cpm?fmtE(cpm):'–','payés pour 1 000 vues en moyenne'],[R.length,'moments de frisson détectés'],[safe,'pubs coupées par Safe Moment'],[fmtN(cl),'clients estimés en boutique (hypothèse)'],[cl?fmtE(cost/cl):'–','par client estimé']].map(k=>`<div class="kpi${k[2]?' hi':''}"><b>${k[0]}</b><span>${k[1]}</span></div>`).join('');
+  const em=['suspense','euphorie','recuperation'].map(e=>({e,v:W.filter(r=>r.emo===e).reduce((a,r)=>a+r.imps,0)})),mx=Math.max(1,...em.map(x=>x.v)),col={suspense:'#f59e0b',euphorie:'var(--red)',recuperation:'var(--blue)'};
+  $('#r-emo').innerHTML=em.map(x=>`<div class="hb"><span><i class="dot d-${x.e}"></i>${EMO[x.e]}</span><div class="bar"><i style="width:${(x.v/mx*100).toFixed(1)}%;background:${col[x.e]}"></i></div><b>${fmtN(x.v)} vues</b></div>`).join('')+`<div class="hb"><span><i class="dot d-peur"></i>Peur</span><div class="bar"></div><b>jamais</b></div><p class="note">${camp.emos.length?'Émotions ciblées : '+camp.emos.map(e=>EMO[e]).join(', ')+'.':'Aucune émotion ciblée : coche-en une dans « Créer ma pub ».'}</p>`;
+  $('#r-tb').innerHTML=R.slice().reverse().map(r=>`<tr><td data-l="Heure">${fmtT(r.t)}</td><td data-l="Émotion"><span><i class="dot d-${r.emo}"></i>${EMO[r.emo]}</span></td><td class="n" data-l="Indice">${r.idx}</td><td data-l="Résultat"><span class="b ${DEC[r.dec][1]}">${DEC[r.dec][0]}</span></td><td class="n" data-l="Enchère">${r.cpm?fmtE(r.cpm):'–'}</td><td class="n" data-l="Vues">${r.imps?fmtN(r.imps):'–'}</td><td class="n" data-l="Coût">${r.cost?fmtE(r.cost):'–'}</td></tr>`).join('')||'<tr><td colspan="7">Aucun moment pour l’instant.</td></tr>';
+}
+$('#r-reset').addEventListener('click',()=>{S.recs=[];S.spent=0;renderRes();renderLog()});
+
+/* ---------- navigation et démarrage ---------- */
+let cur='creer';
+function route(){const h=location.hash.slice(1);cur=['creer','live','resultats'].includes(h)?h:'creer';$$('.screen').forEach(s=>s.classList.toggle('on',s.id===cur));$$('nav a').forEach(a=>a.toggleAttribute('aria-current',a.dataset.s===cur));$$('nav a[aria-current]').forEach(a=>a.setAttribute('aria-current','page'));if(cur==='resultats')renderRes();if(cur==='live'){ui();drawChart()}}
+window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0)});
+function start(data){
+  if(data&&data.camp)Object.assign(camp,data.camp,{photo:null});
+  fillForm();changed();
+  for(let i=0;i<Math.round(LT*30);i++)step(1/30,true);
+  hideAd();renderLog();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){S.paused=true;$('#l-play').textContent='Lecture'}
+  route();
+  let last=performance.now(),ua=0,ca=0,ra=0;
+  const frame=now=>{const dt=Math.min(.05,(now-last)/1000);last=now;if(!S.paused)step(dt,false);
+    if(cur==='live'){draw(dt);ua+=dt;ca+=dt;if(ua>.066){ua=0;ui()}if(ca>.1){ca=0;drawChart()}}
+    else if(cur==='resultats'){ra+=dt;if(ra>1){ra=0;renderRes()}}
+    requestAnimationFrame(frame)};
+  requestAnimationFrame(frame);
+}
+window.claude?.hot?.snapshot?.(()=>({camp:{...camp,photo:null}}));
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
